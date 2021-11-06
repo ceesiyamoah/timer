@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TextInput, Text, Alert, Modal } from 'react-native';
 import CustomButton from '../components/CustomButton';
+import { getTimeDiffInString } from '../utilities/functions';
+
 const NewTimerScreen = () => {
 	const [hours, setHours] = useState('');
 	const [minutes, setMinutes] = useState('');
 	const [timer, setTimer] = useState('');
+	const [time, setTime] = useState('');
 	const [modalOpen, setModalOpen] = useState(false);
 	const verifyMinutes = (text) => {
-		console.log(text);
 		if (+text >= 60) {
 			setMinutes('59');
 			setHours((cur) => `${+cur + 1}`);
@@ -24,27 +26,40 @@ const NewTimerScreen = () => {
 				[{ text: 'Ok', style: 'cancel' }]
 			);
 		}
-		console.log({ hours, minutes });
 		const hoursChanged = hours ? parseInt(hours) : 0;
 		const minutesChanged = minutes ? parseInt(minutes) : 0;
 		const timeToEnd =
 			new Date().getTime() +
 			(hoursChanged * 60 + parseInt(minutesChanged)) * 60 * 1000;
-
-		const date = new Date(timeToEnd).toLocaleString('en-EN', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-			hour: '2-digits',
-			minute: '2-digits',
-		});
-		setTimer(date);
-		console.log(typeof date);
+		// const date = new Date(timeToEnd).toLocaleString('en-EN', {
+		// 	year: 'numeric',
+		// 	month: 'long',
+		// 	day: 'numeric',
+		// 	hour: '2-digits',
+		// 	minute: '2-digits',
+		// });
+		setTimer(timeToEnd);
 		setModalOpen(true);
 	};
 	useEffect(() => {
-		setInterval();
-	}, [timer]);
+		let timerCount;
+		if (timer) {
+			timerCount = setInterval(() => {
+				const timediff = new Date(timer).getTime() - new Date().getTime();
+				const { hours, mins, secs } = getTimeDiffInString(timediff);
+				if (timediff <= 0) {
+					setTime('00:00:00');
+					clearInterval(timerCount);
+					return;
+				}
+				setTime(`${hours}:${mins}:${secs}`);
+			}, 1000);
+		}
+
+		return () => {
+			clearInterval(timerCount);
+		};
+	}, [setTime, timer]);
 	return (
 		<View style={styles.screen}>
 			<Modal animationType='slide' visible={modalOpen} transparent={true}>
@@ -63,7 +78,7 @@ const NewTimerScreen = () => {
 							alignItems: 'center',
 						}}
 					>
-						<Text>{timer}</Text>
+						<Text style={styles.timer}>{time}</Text>
 						<CustomButton onPress={() => setModalOpen(false)} text='Close' />
 					</View>
 				</View>
@@ -80,7 +95,7 @@ const NewTimerScreen = () => {
 				<Text style={styles.spacer}>:</Text>
 				<TextInput
 					style={styles.input}
-					keyboardType='number-pad'
+					keyboardType='numeric'
 					placeholder='MM'
 					maxLength={2}
 					value={minutes}
@@ -88,7 +103,6 @@ const NewTimerScreen = () => {
 				/>
 			</View>
 			<CustomButton text='Start Timer' onPress={confirmTime} />
-			<Text>{timer}</Text>
 		</View>
 	);
 };
@@ -114,6 +128,12 @@ const styles = StyleSheet.create({
 		marginHorizontal: 10,
 		fontSize: 20,
 		color: 'blue',
+	},
+	timer: {
+		fontSize: 20,
+		fontWeight: 'bold',
+
+		color: 'indigo',
 	},
 });
 export default NewTimerScreen;
