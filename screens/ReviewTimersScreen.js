@@ -1,10 +1,32 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-const ReviewTimersScreen = () => {
+import { View, StyleSheet, FlatList, Button } from 'react-native';
+import { connect } from 'react-redux';
+import TimerCard from '../components/TimerCard';
+
+const ReviewTimersScreen = ({ timers, navigation }) => {
+	const renderTimers = ({ item }) => (
+		<TimerCard endTime={item.endTime} key={item.id} />
+	);
+	if (!timers.length) {
+		return (
+			<View style={styles.screen}>
+				<Button
+					title='Create new timer'
+					color='indigo'
+					onPress={() => {
+						navigation.navigate('New');
+					}}
+				/>
+			</View>
+		);
+	}
 	return (
-		<View style={styles.screen}>
-			<Text>Review Timers Screen</Text>
-		</View>
+		<FlatList
+			contentContainerStyle={{ alignItems: 'center' }}
+			data={timers}
+			keyExtractor={(item) => item.id}
+			renderItem={renderTimers}
+		/>
 	);
 };
 const styles = StyleSheet.create({
@@ -13,5 +35,12 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 	},
+	timers: {},
 });
-export default ReviewTimersScreen;
+const mapStateToProps = (state) => ({
+	timers: state.timers.timers,
+});
+
+const mapDispatchToProps = {};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ReviewTimersScreen);

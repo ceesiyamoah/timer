@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TextInput, Text, Alert, Modal } from 'react-native';
+import { connect } from 'react-redux';
 import CustomButton from '../components/CustomButton';
 import { getTimeDiffInString } from '../utilities/functions';
+import { addNewTimer } from '../store/actions/timers';
+import * as Notifications from 'expo-notifications';
 
-const NewTimerScreen = () => {
+const NewTimerScreen = ({ addNewTimer }) => {
 	const [hours, setHours] = useState('');
 	const [minutes, setMinutes] = useState('');
 	const [timer, setTimer] = useState('');
@@ -17,6 +20,24 @@ const NewTimerScreen = () => {
 			setMinutes(text);
 		}
 	};
+
+	useEffect(() => {
+		const sub = Notifications.addNotificationReceivedListener(
+			(notification) => {
+				console.log(notification.notification.request.content.data);
+			}
+		);
+		const background = Notifications.addNotificationResponseReceivedListener(
+			(notification) => {
+				console.log(notification.notification.request.content.data);
+			}
+		);
+
+		return () => {
+			sub.remove();
+			background.remove();
+		};
+	}, []);
 
 	const confirmTime = () => {
 		if (!minutes && !hours) {
@@ -38,8 +59,21 @@ const NewTimerScreen = () => {
 		// 	hour: '2-digits',
 		// 	minute: '2-digits',
 		// });
+		addNewTimer(timeToEnd);
 		setTimer(timeToEnd);
 		setModalOpen(true);
+		const trig = parseInt(hoursChanged) * 60 + parseInt(minutesChanged);
+		Notifications.scheduleNotificationAsync({
+			content: {
+				title: 'Time up',
+				body: 'Countdown has elapsed',
+				data: { timeToEnd },
+			},
+			trigger: {
+				// hour: hours ? parseInt(hours) : 0,
+				seconds: trig * 60,
+			},
+		});
 	};
 	useEffect(() => {
 		let timerCount;
@@ -136,4 +170,10 @@ const styles = StyleSheet.create({
 		color: 'indigo',
 	},
 });
-export default NewTimerScreen;
+const mapStateToProps = (state) => ({});
+
+const mapDispatchToProps = {
+	addNewTimer,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(NewTimerScreen);

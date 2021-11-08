@@ -1,19 +1,25 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import { composeWithDevTools } from 'redux-devtools-extension';
 import AppNavigator from './Navigation/AppNavigator';
+import reducer from './store/reducer';
+import * as Notifications from 'expo-notifications';
 
-// const
+Notifications.setNotificationHandler({
+	handleNotification: async () => ({
+		shouldPlaySound: true,
+		shouldShowAlert: true,
+	}),
+});
+
+const store = createStore(reducer, composeWithDevTools());
 
 export default function App() {
-	return <AppNavigator />;
+	return (
+		<Provider store={store}>
+			<AppNavigator />
+		</Provider>
+	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: '#fff',
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-});
